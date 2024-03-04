@@ -5,6 +5,6 @@ CREATE TABLE debts(
     debtor_id uuid NOT NULL
         REFERENCES users (user_id),
     amount NUMERIC(10,2) NOT NULL,
-    currency TEXT NULL,
+    currency TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL
 );
