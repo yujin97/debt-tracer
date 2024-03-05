@@ -1,10 +1,9 @@
-use actix_web::{web, App, HttpRequest, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use debt_tracer::configuration::get_configuration;
 use debt_tracer::telemetry::{get_subscriber, init_subscriber};
 
-async fn greet(req: HttpRequest) -> impl Responder {
-    let name = req.match_info().get("name").unwrap_or("World");
-    format!("Hello {}!", &name)
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok()
 }
 
 #[tokio::main]
@@ -16,12 +15,8 @@ async fn main() -> Result<(), std::io::Error> {
         "{}:{}",
         configuration.application.host, configuration.application.port
     );
-    HttpServer::new(|| {
-        App::new()
-            .route("/", web::get().to(greet))
-            .route("/{name}", web::get().to(greet))
-    })
-    .bind(address)?
-    .run()
-    .await
+    HttpServer::new(|| App::new().route("/health_check", web::get().to(health_check)))
+        .bind(address)?
+        .run()
+        .await
 }
