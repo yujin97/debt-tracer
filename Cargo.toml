@@ -35,3 +35,5 @@ features = [
     "offline",
 ]
 
+[dev-dependencies]
+reqwest = "0.11"
