@@ -1,11 +1,11 @@
 #[tokio::test]
 async fn health_check_works() {
-    spawn_app();
+    let address = spawn_app();
 
     let client = reqwest::Client::new();
 
     let response = client
-        .get("http://127.0.0.1:8000/health_check")
+        .get(&format!("{}/health_check", &address))
         .send()
         .await
         .expect("Failed to execute request");
@@ -14,8 +14,19 @@ async fn health_check_works() {
     assert_eq!(Some(0), response.content_length());
 }
 
-fn spawn_app() {
-    let server = debt_tracer::startup::run().expect("Failed to bind address");
+fn spawn_app() -> String {
+    let configuration = {
+        let mut c =
+            debt_tracer::configuration::get_configuration().expect("Failed to read configuration.");
+        c.application.port = 0;
+        c
+    };
 
-    let _ = tokio::spawn(server);
+    let application = debt_tracer::startup::Application::build(configuration)
+        .expect("Failed to build application.");
+    let application_port = application.port();
+
+    let _ = tokio::spawn(application.run_until_stopped());
+
+    format!("http://127.0.0.1:{}", application_port)
 }
