@@ -1,17 +1,41 @@
+use std::collections::HashMap;
+
 #[tokio::test]
 async fn health_check_works() {
-    let address = spawn_app();
+    let app_address = spawn_app();
 
     let client = reqwest::Client::new();
 
     let response = client
-        .get(&format!("{}/health_check", &address))
+        .get(&format!("{}/health_check", &app_address))
         .send()
         .await
         .expect("Failed to execute request");
 
     assert!(response.status().is_success());
     assert_eq!(Some(0), response.content_length());
+}
+
+#[tokio::test]
+async fn create_debt_returns_a_200_for_valid_form_data() {
+    let app_address = spawn_app();
+
+    let client = reqwest::Client::new();
+
+    let mut map = HashMap::new();
+    map.insert("debtor", "Yamada");
+    map.insert("creditor", "Yoshida");
+    map.insert("amount", "3000");
+    map.insert("currency", "JPY");
+
+    let response = client
+        .post(&format!("{}/debt", &app_address))
+        .json(&map)
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+    assert_eq!(200, response.status().as_u16());
 }
 
 fn spawn_app() -> String {
