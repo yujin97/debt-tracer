@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[tokio::test]
 async fn health_check_works() {
     let app_address = spawn_app();
@@ -22,20 +20,29 @@ async fn create_debt_returns_a_200_for_valid_form_data() {
 
     let client = reqwest::Client::new();
 
-    let mut map = HashMap::new();
-    map.insert("debtor", "Yamada");
-    map.insert("creditor", "Yoshida");
-    map.insert("amount", "3000");
-    map.insert("currency", "JPY");
+    let create_debt_request = CreateDebtRequest {
+        debtor: "Yamada".to_string(),
+        creditor: "Yoshida".to_string(),
+        amount: 3000.0,
+        currency: "JPY".to_string(),
+    };
 
     let response = client
         .post(&format!("{}/debt", &app_address))
-        .json(&map)
+        .json(&create_debt_request)
         .send()
         .await
         .expect("Failed to execute request");
 
     assert_eq!(200, response.status().as_u16());
+}
+
+#[derive(serde::Serialize)]
+struct CreateDebtRequest {
+    debtor: String,
+    creditor: String,
+    amount: f64,
+    currency: String,
 }
 
 fn spawn_app() -> String {
