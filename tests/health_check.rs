@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[tokio::test]
 async fn health_check_works() {
     let app_address = spawn_app();
@@ -15,7 +17,7 @@ async fn health_check_works() {
 }
 
 #[tokio::test]
-async fn create_debt_returns_a_200_for_valid_form_data() {
+async fn create_debt_returns_a_200_for_valid_json_data() {
     let app_address = spawn_app();
 
     let client = reqwest::Client::new();
@@ -35,6 +37,28 @@ async fn create_debt_returns_a_200_for_valid_form_data() {
         .expect("Failed to execute request");
 
     assert_eq!(200, response.status().as_u16());
+}
+
+#[tokio::test]
+async fn create_debt_returns_a_400_when_data_is_missing() {
+    let app_address = spawn_app();
+
+    let client = reqwest::Client::new();
+
+    let mut create_debt_request = HashMap::new();
+
+    create_debt_request.insert("debtor", "Yamada");
+    create_debt_request.insert("creditor", "Yoshida");
+    create_debt_request.insert("currency", "JPY");
+
+    let response = client
+        .post(&format!("{}/debt", &app_address))
+        .json(&create_debt_request)
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+    assert_eq!(400, response.status().as_u16());
 }
 
 #[derive(serde::Serialize)]
