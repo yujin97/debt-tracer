@@ -1,4 +1,8 @@
+use bigdecimal::ToPrimitive;
+use debt_tracer::configuration::get_configuration;
+use sqlx::{Connection, PgConnection};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 #[tokio::test]
 async fn health_check_works() {
@@ -19,12 +23,21 @@ async fn health_check_works() {
 #[tokio::test]
 async fn create_debt_returns_a_200_for_valid_json_data() {
     let app_address = spawn_app();
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    let connection_string = configuration.database.connection_string();
+
+    let mut connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
 
     let client = reqwest::Client::new();
 
+    let debtor_id = Uuid::new_v4().to_string();
+    let creditor_id = Uuid::new_v4().to_string();
+
     let create_debt_request = CreateDebtRequest {
-        debtor: "Yamada".to_string(),
-        creditor: "Yoshida".to_string(),
+        debtor: debtor_id.clone(),
+        creditor: creditor_id.clone(),
         amount: 3000.0,
         currency: "JPY".to_string(),
     };
@@ -35,6 +48,22 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
         .send()
         .await
         .expect("Failed to execute request");
+
+    let saved = sqlx::query!("SELECT creditor_id, debtor_id, amount, currency FROM debts")
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved debt.");
+
+    assert_eq!(saved.debtor_id.to_string(), debtor_id);
+    assert_eq!(saved.creditor_id.to_string(), creditor_id);
+    assert_eq!(
+        saved
+            .amount
+            .to_f64()
+            .expect("Failed to cast BigDecimal to f64"),
+        3000.0
+    );
+    assert_eq!(saved.currency, "JPY".to_string());
 
     assert_eq!(200, response.status().as_u16());
 }
@@ -71,8 +100,7 @@ struct CreateDebtRequest {
 
 fn spawn_app() -> String {
     let configuration = {
-        let mut c =
-            debt_tracer::configuration::get_configuration().expect("Failed to read configuration.");
+        let mut c = get_configuration().expect("Failed to read configuration.");
         c.application.port = 0;
         c
     };

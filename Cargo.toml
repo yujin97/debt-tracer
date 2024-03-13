@@ -22,6 +22,8 @@ serde-aux = "4"
 config = "0.13"
 secrecy = { version = "0.8", features = ["serde"] }
 anyhow = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+bigdecimal = "0.4.3"
 
 [dependencies.sqlx]
 version = "0.6"
@@ -34,6 +36,7 @@ features = [
     "chrono",
     "migrate",
     "offline",
+    "bigdecimal",
 ]
 
 [dev-dependencies.reqwest]
