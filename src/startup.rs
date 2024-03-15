@@ -2,6 +2,7 @@ use crate::configuration::Settings;
 use crate::debt::create_debt;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
 
 async fn health_check() -> impl Responder {
@@ -14,16 +15,20 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn build(configuration: Settings) -> Result<Self, anyhow::Error> {
+    pub async fn build(configuration: Settings) -> Result<Self, anyhow::Error> {
         let address = format!(
             "{}:{}",
             configuration.application.host, configuration.application.port
         );
 
+        let connection = PgConnection::connect(&configuration.database.connection_string())
+            .await
+            .expect("Failed to connect to Postgres");
+
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
 
-        let server = run(listener)?;
+        let server = run(listener, connection)?;
 
         Ok(Self { port, server })
     }
@@ -37,11 +42,13 @@ impl Application {
     }
 }
 
-pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
-    let server = HttpServer::new(|| {
+pub fn run(listener: TcpListener, connection: PgConnection) -> Result<Server, std::io::Error> {
+    let connection = web::Data::new(connection);
+    let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/debt", web::post().to(create_debt))
+            .app_data(connection.clone())
     })
     .listen(listener)?
     .run();

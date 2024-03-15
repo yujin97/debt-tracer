@@ -24,6 +24,7 @@ secrecy = { version = "0.8", features = ["serde"] }
 anyhow = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 bigdecimal = "0.4.3"
+chrono = { version = "0.4.22", default-features = false, feature = ["clock"] }
 
 [dependencies.sqlx]
 version = "0.6"

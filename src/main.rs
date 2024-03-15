@@ -9,7 +9,9 @@ async fn main() -> Result<(), std::io::Error> {
 
     let configuration = get_configuration().expect("Failed to read configuration.");
 
-    let application = Application::build(configuration).expect("Failed to build application.");
+    let application = Application::build(configuration)
+        .await
+        .expect("Failed to build application.");
 
     application.run_until_stopped().await
 }
