@@ -23,7 +23,7 @@ config = "0.13"
 secrecy = { version = "0.8", features = ["serde"] }
 anyhow = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
-bigdecimal = "0.4.3"
+bigdecimal = { version = "0.3.1", features = ["serde"] }
 chrono = { version = "0.4.22", default-features = false, feature = ["clock"] }
 
 [dependencies.sqlx]

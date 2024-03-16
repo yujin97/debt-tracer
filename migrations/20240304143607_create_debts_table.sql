@@ -6,5 +6,5 @@ CREATE TABLE debts(
         REFERENCES users (user_id),
     amount NUMERIC(10,2) NOT NULL,
     currency TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    created_at timestamptz NOT NULL
 );
