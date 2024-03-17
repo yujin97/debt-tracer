@@ -3,7 +3,7 @@ use actix_web::HttpResponse;
 use bigdecimal::BigDecimal;
 use bigdecimal::FromPrimitive;
 use chrono::Utc;
-use sqlx::PgConnection;
+use sqlx::PgPool;
 use uuid::Uuid;
 
 #[allow(unused)]
@@ -15,10 +15,7 @@ pub struct JsonData {
     currency: String,
 }
 
-pub async fn create_debt(
-    body: web::Json<JsonData>,
-    connection: web::Data<PgConnection>,
-) -> HttpResponse {
+pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
     let creditor = Uuid::parse_str(&body.creditor);
 
     if let Err(_) = creditor {
@@ -37,7 +34,7 @@ pub async fn create_debt(
         return HttpResponse::InternalServerError().finish();
     }
 
-    sqlx::query!(
+    let _ = sqlx::query!(
         r#"
         INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, created_at)
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -49,7 +46,8 @@ pub async fn create_debt(
         body.currency,
         Utc::now()
     )
-    .execute(connection.get_ref());
+    .execute(db_pool.get_ref())
+    .await;
 
     HttpResponse::Ok().finish()
 }

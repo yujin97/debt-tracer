@@ -2,7 +2,7 @@ use crate::configuration::Settings;
 use crate::debt::create_debt;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-use sqlx::{Connection, PgConnection};
+use sqlx::PgPool;
 use std::net::TcpListener;
 
 async fn health_check() -> impl Responder {
@@ -21,7 +21,7 @@ impl Application {
             configuration.application.host, configuration.application.port
         );
 
-        let connection = PgConnection::connect(&configuration.database.connection_string())
+        let connection = PgPool::connect(&configuration.database.connection_string())
             .await
             .expect("Failed to connect to Postgres");
 
@@ -42,13 +42,13 @@ impl Application {
     }
 }
 
-pub fn run(listener: TcpListener, connection: PgConnection) -> Result<Server, std::io::Error> {
-    let connection = web::Data::new(connection);
+pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
+    let db_pool = web::Data::new(db_pool);
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/debt", web::post().to(create_debt))
-            .app_data(connection.clone())
+            .app_data(db_pool.clone())
     })
     .listen(listener)?
     .run();

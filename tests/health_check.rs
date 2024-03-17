@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn health_check_works() {
-    let app_address = spawn_app();
+    let app_address = spawn_app().await;
 
     let client = reqwest::Client::new();
 
@@ -22,7 +22,7 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn create_debt_returns_a_200_for_valid_json_data() {
-    let app_address = spawn_app();
+    let app_address = spawn_app().await;
     let configuration = get_configuration().expect("Failed to read configuration.");
     let connection_string = configuration.database.connection_string();
 
@@ -70,7 +70,7 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
 
 #[tokio::test]
 async fn create_debt_returns_a_400_when_data_is_missing() {
-    let app_address = spawn_app();
+    let app_address = spawn_app().await;
 
     let client = reqwest::Client::new();
 
@@ -98,7 +98,7 @@ struct CreateDebtRequest {
     currency: String,
 }
 
-fn spawn_app() -> String {
+async fn spawn_app() -> String {
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration.");
         c.application.port = 0;
@@ -106,6 +106,7 @@ fn spawn_app() -> String {
     };
 
     let application = debt_tracer::startup::Application::build(configuration)
+        .await
         .expect("Failed to build application.");
     let application_port = application.port();
 
