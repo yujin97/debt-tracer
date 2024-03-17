@@ -18,19 +18,19 @@ pub struct JsonData {
 pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
     let creditor = Uuid::parse_str(&body.creditor);
 
-    if let Err(_) = creditor {
+    if creditor.is_err() {
         return HttpResponse::InternalServerError().finish();
     }
 
     let debtor = Uuid::parse_str(&body.debtor);
 
-    if let Err(_) = debtor {
+    if debtor.is_err() {
         return HttpResponse::InternalServerError().finish();
     }
 
     let amount = BigDecimal::from_f64(body.amount);
 
-    if let None = amount {
+    if amount.is_none() {
         return HttpResponse::InternalServerError().finish();
     }
 
