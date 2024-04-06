@@ -551,6 +551,7 @@ dependencies = [
  "bigdecimal",
  "chrono",
  "config",
+ "once_cell",
  "reqwest",
  "secrecy",
  "serde",
