@@ -71,6 +71,25 @@ async fn create_debt_returns_a_400_when_data_is_missing() {
     assert_eq!(400, response.status().as_u16());
 }
 
+#[tokio::test]
+async fn get_debts_returns_a_200_for_valid_query_string() {
+    let test_app = spawn_app().await;
+
+    let client = reqwest::Client::new();
+
+    let response = client
+        .get(&format!("{}/debts", &test_app.address))
+        .query(&[
+            ("creditor", test_app.test_creditor.user_id),
+            ("debtor", test_app.test_debtor.user_id),
+        ])
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+    assert_eq!(200, response.status().as_u16());
+}
+
 #[derive(serde::Serialize)]
 struct CreateDebtRequest {
     debtor: String,
