@@ -79,10 +79,7 @@ async fn get_debts_returns_a_200_for_valid_query_string() {
 
     let response = client
         .get(&format!("{}/debts", &test_app.address))
-        .query(&[
-            ("creditor", test_app.test_creditor.user_id),
-            ("debtor", test_app.test_debtor.user_id),
-        ])
+        .query(&[("user", test_app.test_creditor.user_id)])
         .send()
         .await
         .expect("Failed to execute request");
