@@ -6,13 +6,17 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[allow(unused)]
 #[derive(serde::Deserialize)]
 pub struct JsonData {
     debtor: String,
     creditor: String,
     amount: f64,
     currency: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct QueryData {
+    user_id: String,
 }
 
 pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
@@ -47,6 +51,24 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
         Utc::now()
     )
     .execute(db_pool.get_ref())
+    .await;
+
+    HttpResponse::Ok().finish()
+}
+
+pub async fn get_debts_by_user_id(
+    query_string: web::Query<QueryData>,
+    db_pool: web::Data<PgPool>,
+) -> HttpResponse {
+    let user_id = Uuid::parse_str(&query_string.user_id).expect("Failed to parse UUID");
+    let pool = db_pool.as_ref();
+
+    let _ = sqlx::query!(
+        "SELECT * FROM debts \
+        WHERE creditor_id = $1 OR debtor_id = $1",
+        user_id
+    )
+    .fetch_all(pool)
     .await;
 
     HttpResponse::Ok().finish()

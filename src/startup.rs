@@ -1,5 +1,5 @@
 use crate::configuration::{DatabaseSettings, Settings};
-use crate::debt::create_debt;
+use crate::debt::{create_debt, get_debts_by_user_id};
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use sqlx::postgres::PgPoolOptions;
@@ -46,6 +46,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
+            .route("/debts", web::get().to(get_debts_by_user_id))
             .route("/debt", web::post().to(create_debt))
             .app_data(db_pool.clone())
     })
