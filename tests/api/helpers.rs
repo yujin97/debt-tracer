@@ -35,6 +35,36 @@ pub struct TestUser {
     pub email: String,
 }
 
+impl TestApp {
+    pub async fn post_debt(&self) -> reqwest::Response {
+        let debtor_id = self.test_debtor.user_id.to_string();
+        let creditor_id = self.test_creditor.user_id.to_string();
+
+        let create_debt_request = CreateDebtRequest {
+            debtor: debtor_id.clone(),
+            creditor: creditor_id.clone(),
+            amount: 3000.0,
+            currency: "JPY".to_string(),
+        };
+
+        self.api_client
+            .post(&format!("{}/debt", &self.address))
+            .json(&create_debt_request)
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn get_debts_by_user_id(&self, user_id: &Uuid) -> reqwest::Response {
+        self.api_client
+            .get(&format!("{}/debts", &self.address))
+            .query(&[("user_id", user_id)])
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+}
+
 impl TestUser {
     pub fn generate() -> Self {
         Self {
@@ -121,4 +151,12 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to migrate the database");
 
     connection_pool
+}
+
+#[derive(serde::Serialize)]
+struct CreateDebtRequest {
+    debtor: String,
+    creditor: String,
+    amount: f64,
+    currency: String,
 }

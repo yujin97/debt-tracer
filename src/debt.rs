@@ -3,6 +3,7 @@ use actix_web::HttpResponse;
 use bigdecimal::FromPrimitive;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Utc;
+use serde::Deserialize;
 use serde::Serialize;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -22,15 +23,15 @@ pub struct QueryData {
     user_id: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DebtJSONResponse {
-    debt_id: String,
-    creditor_id: String,
-    creditor_name: String,
-    debtor_id: String,
-    debtor_name: String,
-    amount: f64,
-    currency: String,
+    pub debt_id: String,
+    pub creditor_id: String,
+    pub creditor_name: String,
+    pub debtor_id: String,
+    pub debtor_name: String,
+    pub amount: f64,
+    pub currency: String,
 }
 
 pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
