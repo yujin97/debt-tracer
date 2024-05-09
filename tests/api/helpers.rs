@@ -36,15 +36,15 @@ pub struct TestUser {
 }
 
 impl TestApp {
-    pub async fn post_debt(&self) -> reqwest::Response {
+    pub async fn post_debt(&self, amount: f64, currency: &str) -> reqwest::Response {
         let debtor_id = self.test_debtor.user_id.to_string();
         let creditor_id = self.test_creditor.user_id.to_string();
 
         let create_debt_request = CreateDebtRequest {
             debtor: debtor_id.clone(),
             creditor: creditor_id.clone(),
-            amount: 3000.0,
-            currency: "JPY".to_string(),
+            amount,
+            currency: currency.to_string(),
         };
 
         self.api_client
