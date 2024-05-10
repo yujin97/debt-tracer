@@ -12,8 +12,8 @@ use crate::utils::e500;
 
 #[derive(serde::Deserialize)]
 pub struct JsonData {
-    debtor: String,
-    creditor: String,
+    debtor_id: String,
+    creditor_id: String,
     amount: f64,
     currency: String,
 }
@@ -35,13 +35,13 @@ pub struct DebtJSONResponse {
 }
 
 pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
-    let creditor = Uuid::parse_str(&body.creditor);
+    let creditor = Uuid::parse_str(&body.creditor_id);
 
     if creditor.is_err() {
         return HttpResponse::InternalServerError().finish();
     }
 
-    let debtor = Uuid::parse_str(&body.debtor);
+    let debtor = Uuid::parse_str(&body.debtor_id);
 
     if debtor.is_err() {
         return HttpResponse::InternalServerError().finish();

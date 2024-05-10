@@ -41,8 +41,8 @@ impl TestApp {
         let creditor_id = self.test_creditor.user_id.to_string();
 
         let create_debt_request = CreateDebtRequest {
-            debtor: debtor_id.clone(),
-            creditor: creditor_id.clone(),
+            debtor_id: debtor_id.clone(),
+            creditor_id: creditor_id.clone(),
             amount,
             currency: currency.to_string(),
         };
@@ -155,8 +155,8 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
 
 #[derive(serde::Serialize)]
 struct CreateDebtRequest {
-    debtor: String,
-    creditor: String,
+    debtor_id: String,
+    creditor_id: String,
     amount: f64,
     currency: String,
 }
