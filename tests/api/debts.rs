@@ -1,8 +1,7 @@
-use bigdecimal::ToPrimitive;
-use std::collections::HashMap;
-
 use super::helpers::{spawn_app, TestApp};
 use debt_tracer::debt::DebtJSONResponse;
+use rust_decimal::prelude::ToPrimitive;
+use std::collections::HashMap;
 
 #[tokio::test]
 async fn create_debt_returns_a_200_for_valid_json_data() {
@@ -32,7 +31,7 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
         saved
             .amount
             .to_f64()
-            .expect("Failed to cast BigDecimal to f64"),
+            .expect("Failed to cast Decimal to f64"),
         3000.0
     );
     assert_eq!(saved.currency, "JPY".to_string());

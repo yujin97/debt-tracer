@@ -1,8 +1,7 @@
 use actix_web::web;
 use actix_web::HttpResponse;
-use bigdecimal::FromPrimitive;
-use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Utc;
+use rust_decimal::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -47,7 +46,7 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
         return HttpResponse::InternalServerError().finish();
     }
 
-    let amount = BigDecimal::from_f64(body.amount);
+    let amount = Decimal::from_f64(body.amount);
 
     if amount.is_none() {
         return HttpResponse::InternalServerError().finish();
