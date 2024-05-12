@@ -33,6 +33,16 @@ pub struct DebtJSONResponse {
     pub currency: String,
 }
 
+#[tracing::instrument(
+    name= "Creating a debt",
+    skip(body, db_pool),
+    fields(
+        creditor_id = %body.creditor_id,
+        debtor_id =%body.debtor_id,
+        amount = %body.amount,
+        currency = %body.currency,
+    )
+)]
 pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
     let creditor = Uuid::parse_str(&body.creditor_id);
 
@@ -70,6 +80,13 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
     HttpResponse::Ok().finish()
 }
 
+#[tracing::instrument(
+    name= "Getting list of debts by User ID",
+    skip(query_string, db_pool),
+    fields(
+        user_id = %query_string.user_id,
+    )
+)]
 pub async fn get_debts_by_user_id(
     query_string: web::Query<QueryData>,
     db_pool: web::Data<PgPool>,
