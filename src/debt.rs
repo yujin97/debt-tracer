@@ -15,6 +15,7 @@ pub struct JsonData {
     creditor_id: String,
     amount: f64,
     currency: String,
+    description: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -31,6 +32,7 @@ pub struct DebtJSONResponse {
     pub debtor_name: String,
     pub amount: f64,
     pub currency: String,
+    pub description: String,
 }
 
 #[tracing::instrument(
@@ -64,14 +66,15 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
 
     let _ = sqlx::query!(
         r#"
-        INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, description, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         "#,
         Uuid::new_v4(),
         creditor.unwrap(),
         debtor.unwrap(),
         amount.unwrap(),
         body.currency,
+        body.description,
         Utc::now()
     )
     .execute(db_pool.get_ref())
@@ -96,9 +99,9 @@ pub async fn get_debts_by_user_id(
 
     let result = sqlx::query!(
         "SELECT debt_id, users_1.user_id as creditor_id, users_1.username as creditor_name, \
-        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency
-        FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id
-        JOIN users users_2 ON debts.debtor_id = users_2.user_id
+        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description \
+        FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id \
+        JOIN users users_2 ON debts.debtor_id = users_2.user_id \
         WHERE creditor_id = $1 OR debtor_id = $1",
         user_id
     )
@@ -117,6 +120,7 @@ pub async fn get_debts_by_user_id(
                     debtor_name: row.debtor_name,
                     // temporarily unwrap this value
                     amount: row.amount.to_f64().expect("Failed to convert big decimal"),
+                    description: row.description,
                     currency: row.currency,
                 })
                 .collect::<Vec<_>>();
