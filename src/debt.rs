@@ -1,5 +1,4 @@
 use actix_web::web;
-use actix_web::HttpResponse;
 use chrono::Utc;
 use rust_decimal::prelude::*;
 use serde::Deserialize;
@@ -24,7 +23,12 @@ pub struct QueryData {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct DebtJSONResponse {
+pub struct CreateDebtJSONResponse {
+    debt_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct GetDebtJSONResponse {
     pub debt_id: String,
     pub creditor_id: String,
     pub creditor_name: String,
@@ -45,31 +49,40 @@ pub struct DebtJSONResponse {
         currency = %body.currency,
     )
 )]
-pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn create_debt(
+    body: web::Json<JsonData>,
+    db_pool: web::Data<PgPool>,
+) -> Result<web::Json<CreateDebtJSONResponse>, actix_web::Error> {
     let creditor = Uuid::parse_str(&body.creditor_id);
 
     if creditor.is_err() {
-        return HttpResponse::InternalServerError().finish();
+        return Err(actix_web::error::ErrorInternalServerError(
+            "Invalid creditor ID",
+        ));
     }
 
     let debtor = Uuid::parse_str(&body.debtor_id);
 
     if debtor.is_err() {
-        return HttpResponse::InternalServerError().finish();
+        return Err(actix_web::error::ErrorInternalServerError(
+            "Invalid debtor ID",
+        ));
     }
 
     let amount = Decimal::from_f64(body.amount);
 
     if amount.is_none() {
-        return HttpResponse::InternalServerError().finish();
+        return Err(actix_web::error::ErrorInternalServerError("Invalid amount"));
     }
 
-    let _ = sqlx::query!(
+    let debt_id = Uuid::new_v4();
+
+    let response = sqlx::query!(
         r#"
         INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, description, created_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         "#,
-        Uuid::new_v4(),
+        debt_id.clone(),
         creditor.unwrap(),
         debtor.unwrap(),
         amount.unwrap(),
@@ -80,7 +93,17 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
     .execute(db_pool.get_ref())
     .await;
 
-    HttpResponse::Ok().finish()
+    let response = match response {
+        Ok(_) => {
+            let res = CreateDebtJSONResponse {
+                debt_id: debt_id.to_string(),
+            };
+            Ok(web::Json(res))
+        }
+        Err(e) => Err(e500(e)),
+    };
+
+    response
 }
 
 #[tracing::instrument(
@@ -93,7 +116,7 @@ pub async fn create_debt(body: web::Json<JsonData>, db_pool: web::Data<PgPool>) 
 pub async fn get_debts_by_user_id(
     query_string: web::Query<QueryData>,
     db_pool: web::Data<PgPool>,
-) -> Result<web::Json<Vec<DebtJSONResponse>>, actix_web::Error> {
+) -> Result<web::Json<Vec<GetDebtJSONResponse>>, actix_web::Error> {
     let user_id = Uuid::parse_str(&query_string.user_id).expect("Failed to parse UUID");
     let pool = db_pool.as_ref();
 
@@ -112,7 +135,7 @@ pub async fn get_debts_by_user_id(
         Ok(result) => {
             let result = result
                 .into_iter()
-                .map(|row| DebtJSONResponse {
+                .map(|row| GetDebtJSONResponse {
                     debt_id: row.debt_id.to_string(),
                     creditor_id: row.creditor_id.to_string(),
                     creditor_name: row.creditor_name,

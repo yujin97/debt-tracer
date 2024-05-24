@@ -1,5 +1,5 @@
 use super::helpers::{spawn_app, TestApp};
-use debt_tracer::debt::DebtJSONResponse;
+use debt_tracer::debt::{CreateDebtJSONResponse, GetDebtJSONResponse};
 use rust_decimal::prelude::ToPrimitive;
 use std::collections::HashMap;
 
@@ -19,6 +19,10 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
     let response = test_app.post_debt(3000.0, "JPY", "test debt").await;
 
     assert_eq!(200, response.status().as_u16());
+
+    let debt_id = response.json::<CreateDebtJSONResponse>().await;
+
+    assert!(debt_id.is_ok());
 
     let saved =
         sqlx::query!("SELECT creditor_id, debtor_id, amount, currency, description FROM debts")
@@ -87,7 +91,7 @@ async fn get_debts_returns_a_list_of_debts() {
 
     assert_eq!(200, response.status().as_u16());
 
-    let json_result = response.json::<Vec<DebtJSONResponse>>().await;
+    let json_result = response.json::<Vec<GetDebtJSONResponse>>().await;
 
     assert!(json_result.is_ok());
 
