@@ -31,7 +31,7 @@ pub struct TestApp {
 pub struct TestUser {
     pub user_id: Uuid,
     pub username: String,
-    pub password: String,
+    pub password_hash: String,
     pub email: String,
 }
 
@@ -76,17 +76,17 @@ impl TestUser {
         Self {
             user_id: Uuid::new_v4(),
             username: Uuid::new_v4().to_string(),
-            password: Uuid::new_v4().to_string(),
+            password_hash: Uuid::new_v4().to_string(),
             email: Uuid::new_v4().to_string(),
         }
     }
 
     async fn store(&self, pool: &PgPool) {
         sqlx::query!(
-            "INSERT INTO users (user_id, username, password, email) VALUES ($1, $2, $3,$4)",
+            "INSERT INTO users (user_id, username, password_hash, email) VALUES ($1, $2, $3,$4)",
             self.user_id,
             self.username,
-            self.password,
+            self.password_hash,
             self.email
         )
         .execute(pool)
