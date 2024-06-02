@@ -1,5 +1,6 @@
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::debt::{create_debt, get_debts_by_user_id};
+use crate::routes::login::post::login;
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
@@ -69,6 +70,7 @@ pub async fn run(
             .route("/health_check", web::get().to(health_check))
             .route("/debts", web::get().to(get_debts_by_user_id))
             .route("/debt", web::post().to(create_debt))
+            .route("/login", web::post().to(login))
             .app_data(db_pool.clone())
     })
     .listen(listener)?

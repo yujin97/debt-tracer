@@ -1,1 +1,3 @@
-mod post;
+pub mod post;
+
+pub use post::JsonLoginData;

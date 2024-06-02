@@ -1,4 +1,4 @@
-use super::helpers::{spawn_app, TestApp};
+use crate::helpers::{spawn_app, TestApp};
 use debt_tracer::debt::{CreateDebtJSONResponse, GetDebtJSONResponse};
 use rust_decimal::prelude::ToPrimitive;
 use std::collections::HashMap;

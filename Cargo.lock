@@ -775,6 +775,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde-aux",
+ "serde_json",
  "sqlx",
  "thiserror",
  "tokio",

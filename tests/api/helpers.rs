@@ -1,3 +1,5 @@
+use argon2::password_hash::SaltString;
+use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use debt_tracer::configuration::get_configuration;
 use debt_tracer::configuration::DatabaseSettings;
 use debt_tracer::startup::get_connection_pool;
@@ -31,7 +33,7 @@ pub struct TestApp {
 pub struct TestUser {
     pub user_id: Uuid,
     pub username: String,
-    pub password_hash: String,
+    pub password: String,
     pub email: String,
 }
 
@@ -69,6 +71,20 @@ impl TestApp {
             .await
             .expect("Failed to execute request")
     }
+
+    pub async fn login_as_test_creditor(&self) -> reqwest::Response {
+        let login_request_body = serde_json::json!({
+            "username" : &self.test_creditor.username,
+            "password" : &self.test_creditor.password,
+        });
+
+        self.api_client
+            .post(&format!("{}/login", &self.address))
+            .json(&login_request_body)
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
 }
 
 impl TestUser {
@@ -76,17 +92,26 @@ impl TestUser {
         Self {
             user_id: Uuid::new_v4(),
             username: Uuid::new_v4().to_string(),
-            password_hash: Uuid::new_v4().to_string(),
+            password: Uuid::new_v4().to_string(),
             email: Uuid::new_v4().to_string(),
         }
     }
 
     async fn store(&self, pool: &PgPool) {
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        let password_hash = Argon2::new(
+            Algorithm::Argon2id,
+            Version::V0x13,
+            Params::new(15000, 2, 1, None).unwrap(),
+        )
+        .hash_password(self.password.as_bytes(), &salt)
+        .unwrap()
+        .to_string();
         sqlx::query!(
             "INSERT INTO users (user_id, username, password_hash, email) VALUES ($1, $2, $3,$4)",
             self.user_id,
             self.username,
-            self.password_hash,
+            password_hash,
             self.email
         )
         .execute(pool)
