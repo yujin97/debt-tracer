@@ -12,6 +12,7 @@ name = "debt-tracer"
 
 [dependencies]
 actix-web = "4"
+actix-web-lab = "0.20.2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
@@ -50,5 +51,5 @@ features = [
 [dev-dependencies.reqwest]
 version = "0.11"
 default-features = false
-features = ["json"]
+features = ["json", "cookies"]
 

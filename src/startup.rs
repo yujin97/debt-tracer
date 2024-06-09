@@ -1,3 +1,4 @@
+use crate::authentication::reject_anonymous_users;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::debt::{create_debt, get_debts_by_user_id};
 use crate::routes::login::post::login;
@@ -6,6 +7,7 @@ use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web_lab::middleware::from_fn;
 use secrecy::{ExposeSecret, Secret};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -68,9 +70,13 @@ pub async fn run(
                 secret_key.clone(),
             ))
             .route("/health_check", web::get().to(health_check))
-            .route("/debts", web::get().to(get_debts_by_user_id))
             .route("/debt", web::post().to(create_debt))
             .route("/login", web::post().to(login))
+            .service(
+                web::scope("")
+                    .wrap(from_fn(reject_anonymous_users))
+                    .route("debts", web::get().to(get_debts_by_user_id)),
+            )
             .app_data(db_pool.clone())
     })
     .listen(listener)?

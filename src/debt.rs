@@ -1,3 +1,4 @@
+use crate::authentication::UserId;
 use actix_web::web;
 use chrono::Utc;
 use rust_decimal::prelude::*;
@@ -15,11 +16,6 @@ pub struct JsonData {
     amount: f64,
     currency: String,
     description: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct QueryData {
-    user_id: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -106,18 +102,12 @@ pub async fn create_debt(
     response
 }
 
-#[tracing::instrument(
-    name= "Getting list of debts by User ID",
-    skip(query_string, db_pool),
-    fields(
-        user_id = %query_string.user_id,
-    )
-)]
+#[tracing::instrument(name = "Getting list of debts by User ID", skip(db_pool))]
 pub async fn get_debts_by_user_id(
-    query_string: web::Query<QueryData>,
+    user_id: web::ReqData<UserId>,
     db_pool: web::Data<PgPool>,
 ) -> Result<web::Json<Vec<GetDebtJSONResponse>>, actix_web::Error> {
-    let user_id = Uuid::parse_str(&query_string.user_id).expect("Failed to parse UUID");
+    let user_id = *user_id.into_inner();
     let pool = db_pool.as_ref();
 
     let result = sqlx::query!(

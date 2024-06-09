@@ -63,16 +63,15 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
-    pub async fn get_debts_by_user_id(&self, user_id: &Uuid) -> reqwest::Response {
+    pub async fn get_debts_as_test_creditor(&self) -> reqwest::Response {
         self.api_client
             .get(&format!("{}/debts", &self.address))
-            .query(&[("user_id", user_id)])
             .send()
             .await
             .expect("Failed to execute request")
     }
 
-    pub async fn login_as_test_creditor(&self) -> reqwest::Response {
+    pub async fn post_login_as_test_creditor(&self) -> reqwest::Response {
         let login_request_body = serde_json::json!({
             "username" : &self.test_creditor.username,
             "password" : &self.test_creditor.password,
@@ -146,6 +145,7 @@ pub async fn spawn_app() -> TestApp {
 
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
+        .cookie_store(true)
         .build()
         .unwrap();
 

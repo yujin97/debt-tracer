@@ -68,9 +68,9 @@ async fn create_debt_returns_a_400_when_data_is_missing() {
 async fn get_debts_returns_a_200_for_valid_query_string() {
     let test_app = spawn_app().await;
 
-    let response = test_app
-        .get_debts_by_user_id(&test_app.test_creditor.user_id)
-        .await;
+    test_app.post_login_as_test_creditor().await;
+
+    let response = test_app.get_debts_as_test_creditor().await;
 
     assert_eq!(200, response.status().as_u16());
 }
@@ -85,9 +85,9 @@ async fn get_debts_returns_a_list_of_debts() {
         test_app.post_debt(*amount, currency, description).await;
     }
 
-    let response = test_app
-        .get_debts_by_user_id(&test_app.test_creditor.user_id)
-        .await;
+    test_app.post_login_as_test_creditor().await;
+
+    let response = test_app.get_debts_as_test_creditor().await;
 
     assert_eq!(200, response.status().as_u16());
 
