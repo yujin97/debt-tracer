@@ -6,6 +6,7 @@ use actix_web::http::StatusCode;
 use actix_web::web;
 use actix_web::{HttpResponse, ResponseError};
 use secrecy::Secret;
+use serde_json::json;
 use sqlx::PgPool;
 
 #[derive(thiserror::Error)]
@@ -58,7 +59,7 @@ pub async fn login(
                     HttpResponse::InternalServerError().finish(),
                 )
             })?;
-            Ok(HttpResponse::Ok().finish())
+            Ok(HttpResponse::Ok().json(json!({ "user_id": user_id })))
         }
         Err(e) => {
             let e = match e {
