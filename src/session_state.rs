@@ -9,6 +9,7 @@ pub struct TypedSession(Session);
 
 impl TypedSession {
     const USER_ID_KEY: &'static str = "user_id";
+    const USERNAME_KEY: &'static str = "username";
 
     pub fn renew(&self) {
         self.0.renew();
@@ -20,6 +21,14 @@ impl TypedSession {
 
     pub fn get_user_id(&self) -> Result<Option<Uuid>, SessionGetError> {
         self.0.get(Self::USER_ID_KEY)
+    }
+
+    pub fn insert_username(&self, username: String) -> Result<(), SessionInsertError> {
+        self.0.insert(Self::USERNAME_KEY, username)
+    }
+
+    pub fn get_username(&self) -> Result<Option<String>, SessionGetError> {
+        self.0.get(Self::USERNAME_KEY)
     }
 
     pub fn log_out(self) {

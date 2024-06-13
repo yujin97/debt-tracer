@@ -9,6 +9,11 @@ pub struct Credentials {
     pub password: Secret<String>,
 }
 
+pub struct UserInfo {
+    pub user_id: uuid::Uuid,
+    pub username: String,
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum AuthError {
     #[error("Invalid credentials.")]
@@ -20,8 +25,8 @@ pub enum AuthError {
 pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<uuid::Uuid, AuthError> {
-    let mut user_id = None;
+) -> Result<UserInfo, AuthError> {
+    let mut user_info = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=15000,t=2,p=1$\
         gZiV/M1gPc22ElAH/Jh1Hw$\
@@ -29,10 +34,10 @@ pub async fn validate_credentials(
             .to_string(),
     );
 
-    if let Some((stored_user_id, stored_password_hash)) =
+    if let Some((stored_user_info, stored_password_hash)) =
         get_stored_credentials(&credentials.username, pool).await?
     {
-        user_id = Some(stored_user_id);
+        user_info = Some(stored_user_info);
         expected_password_hash = stored_password_hash;
     }
 
@@ -42,7 +47,7 @@ pub async fn validate_credentials(
     .await
     .context("Failed to spawn a blocking task.")??;
 
-    user_id
+    user_info
         .ok_or_else(|| anyhow::anyhow!("Unknown username."))
         .map_err(AuthError::InvalidCredentials)
 }
@@ -72,10 +77,10 @@ fn verify_password_hash(
 async fn get_stored_credentials(
     username: &str,
     pool: &PgPool,
-) -> Result<Option<(uuid::Uuid, Secret<String>)>, anyhow::Error> {
+) -> Result<Option<(UserInfo, Secret<String>)>, anyhow::Error> {
     let row = sqlx::query!(
         r#"
-    SELECT user_id, password_hash
+    SELECT user_id, username, password_hash
     FROM users
     WHERE username = $1
     "#,
@@ -84,6 +89,14 @@ async fn get_stored_credentials(
     .fetch_optional(pool)
     .await
     .context("Failed to perform a query to retrieve stored credentials.")?
-    .map(|row| (row.user_id, Secret::new(row.password_hash)));
+    .map(|row| {
+        (
+            UserInfo {
+                user_id: row.user_id,
+                username: row.username,
+            },
+            Secret::new(row.password_hash),
+        )
+    });
     Ok(row)
 }

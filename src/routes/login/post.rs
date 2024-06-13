@@ -1,4 +1,4 @@
-use crate::authentication::{validate_credentials, AuthError, Credentials};
+use crate::authentication::{validate_credentials, AuthError, Credentials, UserInfo};
 use crate::session_state::TypedSession;
 use crate::utils::error_chain_fmt;
 use actix_web::error::InternalError;
@@ -6,7 +6,6 @@ use actix_web::http::StatusCode;
 use actix_web::web;
 use actix_web::{HttpResponse, ResponseError};
 use secrecy::Secret;
-use serde_json::json;
 use sqlx::PgPool;
 
 #[derive(thiserror::Error)]
@@ -50,8 +49,9 @@ pub async fn login(
     };
     tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
     match validate_credentials(credentials, &db_pool).await {
-        Ok(user_id) => {
+        Ok(UserInfo { user_id, username }) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            tracing::Span::current().record("ussername", &tracing::field::display(&username));
             session.renew();
             session.insert_user_id(user_id).map_err(|e| {
                 InternalError::from_response(
@@ -59,7 +59,13 @@ pub async fn login(
                     HttpResponse::InternalServerError().finish(),
                 )
             })?;
-            Ok(HttpResponse::Ok().json(json!({ "user_id": user_id })))
+            session.insert_username(username).map_err(|e| {
+                InternalError::from_response(
+                    LoginError::UnexpectedError(e.into()),
+                    HttpResponse::InternalServerError().finish(),
+                )
+            })?;
+            Ok(HttpResponse::Ok().finish())
         }
         Err(e) => {
             let e = match e {
