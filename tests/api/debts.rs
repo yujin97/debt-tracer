@@ -1,5 +1,5 @@
 use crate::helpers::{spawn_app, TestApp};
-use debt_tracer::debt::{CreateDebtJSONResponse, GetDebtJSONResponse};
+use debt_tracer::debts::{CreateDebtJSONResponse, GetDebtJSONResponse};
 use rust_decimal::prelude::ToPrimitive;
 use std::collections::HashMap;
 

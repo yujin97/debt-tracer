@@ -9,6 +9,7 @@ pub struct Credentials {
     pub password: Secret<String>,
 }
 
+#[derive(serde::Serialize)]
 pub struct UserInfo {
     pub user_id: uuid::Uuid,
     pub username: String,

@@ -1,7 +1,7 @@
 use crate::authentication::reject_anonymous_users;
 use crate::configuration::{DatabaseSettings, Settings};
-use crate::debt::{create_debt, get_debts_by_user_id};
-use crate::routes::login::post::login;
+use crate::debts::{create_debt, get_debts_by_user_id};
+use crate::routes::{get_user_info_by_id, login};
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
@@ -75,7 +75,8 @@ pub async fn run(
             .service(
                 web::scope("")
                     .wrap(from_fn(reject_anonymous_users))
-                    .route("debts", web::get().to(get_debts_by_user_id)),
+                    .route("debts", web::get().to(get_debts_by_user_id))
+                    .route("user", web::get().to(get_user_info_by_id)),
             )
             .app_data(db_pool.clone())
     })
