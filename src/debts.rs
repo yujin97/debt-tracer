@@ -89,7 +89,7 @@ pub async fn create_debt(
     .execute(db_pool.get_ref())
     .await;
 
-    let response = match response {
+    match response {
         Ok(_) => {
             let res = CreateDebtJSONResponse {
                 debt_id: debt_id.to_string(),
@@ -97,9 +97,7 @@ pub async fn create_debt(
             Ok(web::Json(res))
         }
         Err(e) => Err(e500(e)),
-    };
-
-    response
+    }
 }
 
 #[tracing::instrument(name = "Getting list of debts by User ID", skip(db_pool))]
@@ -121,7 +119,7 @@ pub async fn get_debts_by_user_id(
     .fetch_all(pool)
     .await;
 
-    let response = match result {
+    match result {
         Ok(result) => {
             let result = result
                 .into_iter()
@@ -140,7 +138,5 @@ pub async fn get_debts_by_user_id(
             Ok(web::Json(result))
         }
         Err(e) => Err(e500(e)),
-    };
-
-    response
+    }
 }
