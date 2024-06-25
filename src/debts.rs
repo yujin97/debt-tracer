@@ -33,6 +33,7 @@ pub struct GetDebtJSONResponse {
     pub amount: f64,
     pub currency: String,
     pub description: String,
+    pub created_at: String,
 }
 
 #[tracing::instrument(
@@ -110,7 +111,7 @@ pub async fn get_debts_by_user_id(
 
     let result = sqlx::query!(
         "SELECT debt_id, users_1.user_id as creditor_id, users_1.username as creditor_name, \
-        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description \
+        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description, created_at \
         FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id \
         JOIN users users_2 ON debts.debtor_id = users_2.user_id \
         WHERE creditor_id = $1 OR debtor_id = $1",
@@ -133,6 +134,7 @@ pub async fn get_debts_by_user_id(
                     amount: row.amount.to_f64().expect("Failed to convert big decimal"),
                     description: row.description,
                     currency: row.currency,
+                    created_at: row.created_at.to_string(),
                 })
                 .collect::<Vec<_>>();
             Ok(web::Json(result))
