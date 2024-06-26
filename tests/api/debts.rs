@@ -24,11 +24,12 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
 
     assert!(debt_id.is_ok());
 
-    let saved =
-        sqlx::query!("SELECT creditor_id, debtor_id, amount, currency, description FROM debts")
-            .fetch_one(&test_app.db_pool)
-            .await
-            .expect("Failed to fetch saved debt.");
+    let saved = sqlx::query!(
+        "SELECT creditor_id, debtor_id, amount, currency, description, status FROM debts"
+    )
+    .fetch_one(&test_app.db_pool)
+    .await
+    .expect("Failed to fetch saved debt.");
 
     assert_eq!(saved.debtor_id.to_string(), debtor_id);
     assert_eq!(saved.creditor_id.to_string(), creditor_id);
@@ -41,6 +42,7 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
     );
     assert_eq!(saved.currency, "JPY".to_string());
     assert_eq!(saved.description, "test debt".to_string());
+    assert_eq!(saved.status, "pending".to_string());
 }
 
 #[tokio::test]
@@ -109,5 +111,6 @@ async fn get_debts_returns_a_list_of_debts() {
         assert_eq!(debt.amount, amount);
         assert_eq!(debt.currency, currency.to_owned());
         assert_eq!(debt.description, description.to_owned());
+        assert_eq!(debt.status, "pending".to_owned());
     }
 }

@@ -33,6 +33,7 @@ pub struct GetDebtJSONResponse {
     pub amount: f64,
     pub currency: String,
     pub description: String,
+    pub status: String,
     pub created_at: String,
 }
 
@@ -76,8 +77,8 @@ pub async fn create_debt(
 
     let response = sqlx::query!(
         r#"
-        INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, description, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, description, status, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         "#,
         debt_id.clone(),
         creditor.unwrap(),
@@ -85,6 +86,7 @@ pub async fn create_debt(
         amount.unwrap(),
         body.currency,
         body.description,
+        "pending",
         Utc::now()
     )
     .execute(db_pool.get_ref())
@@ -111,7 +113,7 @@ pub async fn get_debts_by_user_id(
 
     let result = sqlx::query!(
         "SELECT debt_id, users_1.user_id as creditor_id, users_1.username as creditor_name, \
-        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description, created_at \
+        users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description, status, created_at \
         FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id \
         JOIN users users_2 ON debts.debtor_id = users_2.user_id \
         WHERE creditor_id = $1 OR debtor_id = $1",
@@ -134,6 +136,7 @@ pub async fn get_debts_by_user_id(
                     amount: row.amount.to_f64().expect("Failed to convert big decimal"),
                     description: row.description,
                     currency: row.currency,
+                    status: row.status,
                     created_at: row.created_at.to_string(),
                 })
                 .collect::<Vec<_>>();
