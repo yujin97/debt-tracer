@@ -1,6 +1,7 @@
 pub mod authentication;
 pub mod configuration;
 pub mod debts;
+pub mod domain;
 pub mod routes;
 pub mod session_state;
 pub mod startup;
