@@ -14,19 +14,19 @@ pub enum DebtCurrency {
     USD,
 }
 
-const AUD_STR: &'static str = "AUD";
-const CAD_STR: &'static str = "CAD";
-const CHF_STR: &'static str = "CHF";
-const CNY_STR: &'static str = "CNY";
-const EUR_STR: &'static str = "EUR";
-const GBP_STR: &'static str = "GBP";
-const HKD_STR: &'static str = "HKD";
-const JPY_STR: &'static str = "JPY";
-const KRW_STR: &'static str = "KRW";
-const NZD_STR: &'static str = "NZD";
-const SEK_STR: &'static str = "SEK";
-const SGD_STR: &'static str = "SGD";
-const USD_STR: &'static str = "USD";
+const AUD_STR: &str = "AUD";
+const CAD_STR: &str = "CAD";
+const CHF_STR: &str = "CHF";
+const CNY_STR: &str = "CNY";
+const EUR_STR: &str = "EUR";
+const GBP_STR: &str = "GBP";
+const HKD_STR: &str = "HKD";
+const JPY_STR: &str = "JPY";
+const KRW_STR: &str = "KRW";
+const NZD_STR: &str = "NZD";
+const SEK_STR: &str = "SEK";
+const SGD_STR: &str = "SGD";
+const USD_STR: &str = "USD";
 
 impl std::fmt::Display for DebtCurrency {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
