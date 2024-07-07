@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum DebtCurrency {
     AUD,
     CAD,
@@ -70,6 +71,10 @@ impl DebtCurrency {
             USD_STR => Ok(USD),
             _ => Err(format!("{} is not a valid currency", s)),
         }
+    }
+
+    pub fn inner_string(&self) -> String {
+        self.to_string()
     }
 }
 

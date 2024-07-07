@@ -1,4 +1,5 @@
 use crate::authentication::UserId;
+use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, NewDebt};
 use actix_web::web;
 use chrono::Utc;
 use rust_decimal::prelude::*;
@@ -37,6 +38,28 @@ pub struct GetDebtJSONResponse {
     pub created_at: String,
 }
 
+impl TryFrom<JsonData> for NewDebt {
+    type Error = String;
+
+    fn try_from(json_data: JsonData) -> Result<Self, Self::Error> {
+        let debtor_id = Uuid::parse_str(&json_data.debtor_id)
+            .map_err(|_| format!("{} is not valid UUID", &json_data.debtor_id))?;
+        let creditor_id = Uuid::parse_str(&json_data.creditor_id)
+            .map_err(|_| format!("{} is not valid UUID", &json_data.creditor_id))?;
+        let amount = DebtAmount::parse(json_data.amount)?;
+        let currency = DebtCurrency::parse(json_data.currency)?;
+        let description = DebtDescription::parse(json_data.description)?;
+
+        Ok(Self {
+            debtor_id,
+            creditor_id,
+            amount,
+            currency,
+            description,
+        })
+    }
+}
+
 #[tracing::instrument(
     name= "Creating a debt",
     skip(body, db_pool),
@@ -51,23 +74,12 @@ pub async fn create_debt(
     body: web::Json<JsonData>,
     db_pool: web::Data<PgPool>,
 ) -> Result<web::Json<CreateDebtJSONResponse>, actix_web::Error> {
-    let creditor = Uuid::parse_str(&body.creditor_id);
+    let new_debt: NewDebt = body
+        .0
+        .try_into()
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    if creditor.is_err() {
-        return Err(actix_web::error::ErrorInternalServerError(
-            "Invalid creditor ID",
-        ));
-    }
-
-    let debtor = Uuid::parse_str(&body.debtor_id);
-
-    if debtor.is_err() {
-        return Err(actix_web::error::ErrorInternalServerError(
-            "Invalid debtor ID",
-        ));
-    }
-
-    let amount = Decimal::from_f64(body.amount);
+    let amount = Decimal::from_f64(new_debt.amount.inner());
 
     if amount.is_none() {
         return Err(actix_web::error::ErrorInternalServerError("Invalid amount"));
@@ -81,11 +93,11 @@ pub async fn create_debt(
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         "#,
         debt_id.clone(),
-        creditor.unwrap(),
-        debtor.unwrap(),
-        amount.unwrap(),
-        body.currency,
-        body.description,
+        &new_debt.creditor_id,
+        &new_debt.debtor_id,
+        amount,
+        new_debt.currency.inner_string(),
+        new_debt.description.as_ref(),
         "pending",
         Utc::now()
     )

@@ -13,6 +13,10 @@ impl DebtAmount {
 
         Ok(Self(amount))
     }
+
+    pub fn inner(&self) -> f64 {
+        self.0
+    }
 }
 
 impl AsRef<f64> for DebtAmount {

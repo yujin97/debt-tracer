@@ -34,6 +34,7 @@ rust_decimal_macros = "1.34.2"
 actix-session = { version = "0.7", features = ["redis-rs-tls-session"] }
 argon2 = { version = "0.4", features = ["std"] }
 rand = { version = "0.8", features=["std_rng"] }
+unicode-segmentation = "1"
 
 [dependencies.sqlx]
 version = "0.7.4"
@@ -53,3 +54,5 @@ version = "0.11"
 default-features = false
 features = ["json", "cookies"]
 
+[dev-dependencies]
+claims = "0.7"
