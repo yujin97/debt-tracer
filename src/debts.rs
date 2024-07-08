@@ -1,5 +1,5 @@
 use crate::authentication::UserId;
-use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, NewDebt};
+use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, DebtUserId, NewDebt};
 use actix_web::web;
 use chrono::Utc;
 use rust_decimal::prelude::*;
@@ -42,10 +42,8 @@ impl TryFrom<JsonData> for NewDebt {
     type Error = String;
 
     fn try_from(json_data: JsonData) -> Result<Self, Self::Error> {
-        let debtor_id = Uuid::parse_str(&json_data.debtor_id)
-            .map_err(|_| format!("{} is not valid UUID", &json_data.debtor_id))?;
-        let creditor_id = Uuid::parse_str(&json_data.creditor_id)
-            .map_err(|_| format!("{} is not valid UUID", &json_data.creditor_id))?;
+        let debtor_id = DebtUserId::parse(&json_data.debtor_id)?;
+        let creditor_id = DebtUserId::parse(&json_data.creditor_id)?;
         let amount = DebtAmount::parse(json_data.amount)?;
         let currency = DebtCurrency::parse(json_data.currency)?;
         let description = DebtDescription::parse(json_data.description)?;
@@ -93,8 +91,8 @@ pub async fn create_debt(
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         "#,
         debt_id.clone(),
-        &new_debt.creditor_id,
-        &new_debt.debtor_id,
+        new_debt.creditor_id.as_ref(),
+        new_debt.debtor_id.as_ref(),
         amount,
         new_debt.currency.inner_string(),
         new_debt.description.as_ref(),
