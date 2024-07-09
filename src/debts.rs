@@ -1,5 +1,5 @@
 use crate::authentication::UserId;
-use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, DebtUserId, NewDebt};
+use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, DebtStatus, DebtUserId, NewDebt};
 use actix_web::web;
 use chrono::Utc;
 use rust_decimal::prelude::*;
@@ -54,6 +54,7 @@ impl TryFrom<JsonData> for NewDebt {
             amount,
             currency,
             description,
+            status: DebtStatus::Pending,
         })
     }
 }
@@ -94,9 +95,9 @@ pub async fn create_debt(
         new_debt.creditor_id.as_ref(),
         new_debt.debtor_id.as_ref(),
         amount,
-        new_debt.currency.inner_string(),
+        new_debt.currency.to_string(),
         new_debt.description.as_ref(),
-        "pending",
+        new_debt.status.to_string(),
         Utc::now()
     )
     .execute(db_pool.get_ref())
