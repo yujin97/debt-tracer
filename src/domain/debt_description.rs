@@ -24,11 +24,17 @@ impl DebtDescription {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use claims::assert_ok;
+    use claims::{assert_err, assert_ok};
 
     #[test]
     fn a_256_grapheme_long_description_is_valid() {
         let description = "ё".repeat(256);
         assert_ok!(DebtDescription::parse(description));
+    }
+
+    #[test]
+    fn a_description_longer_than_256_graphemes_is_rejected() {
+        let description = "a".repeat(257);
+        assert_err!(DebtDescription::parse(description));
     }
 }
