@@ -1,6 +1,10 @@
 use crate::authentication::UserId;
 use crate::domain::{DebtAmount, DebtCurrency, DebtDescription, DebtStatus, DebtUserId, NewDebt};
+use crate::utils::error_chain_fmt;
+use actix_web::http::StatusCode;
 use actix_web::web;
+use actix_web::ResponseError;
+use anyhow::Context;
 use chrono::Utc;
 use rust_decimal::prelude::*;
 use serde::Deserialize;
@@ -72,21 +76,20 @@ impl TryFrom<JsonData> for NewDebt {
 pub async fn create_debt(
     body: web::Json<JsonData>,
     db_pool: web::Data<PgPool>,
-) -> Result<web::Json<CreateDebtJSONResponse>, actix_web::Error> {
+) -> Result<web::Json<CreateDebtJSONResponse>, CreateDebtError> {
     let new_debt: NewDebt = body
         .0
         .try_into()
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+        .map_err(CreateDebtError::ValidationError)?;
 
-    let amount = Decimal::from_f64(new_debt.amount.inner());
-
-    if amount.is_none() {
-        return Err(actix_web::error::ErrorInternalServerError("Invalid amount"));
-    }
+    let amount = new_debt
+        .amount
+        .inner_decimal()
+        .map_err(CreateDebtError::ValidationError)?;
 
     let debt_id = Uuid::new_v4();
 
-    let response = sqlx::query!(
+    sqlx::query!(
         r#"
         INSERT INTO debts (debt_id, creditor_id, debtor_id, amount, currency, description, status, created_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -101,17 +104,13 @@ pub async fn create_debt(
         Utc::now()
     )
     .execute(db_pool.get_ref())
-    .await;
+    .await
+    .context("Failed to insert new debt into the database.")?;
 
-    match response {
-        Ok(_) => {
-            let res = CreateDebtJSONResponse {
-                debt_id: debt_id.to_string(),
-            };
-            Ok(web::Json(res))
-        }
-        Err(e) => Err(e500(e)),
-    }
+    let res = CreateDebtJSONResponse {
+        debt_id: debt_id.to_string(),
+    };
+    Ok(web::Json(res))
 }
 
 #[tracing::instrument(name = "Getting list of debts by User ID", skip(db_pool))]
@@ -154,5 +153,28 @@ pub async fn get_debts_by_user_id(
             Ok(web::Json(result))
         }
         Err(e) => Err(e500(e)),
+    }
+}
+
+#[derive(thiserror::Error)]
+pub enum CreateDebtError {
+    #[error("{0}")]
+    ValidationError(String),
+    #[error("Error occurred when creating a new debt.")]
+    UnexpectedError(#[from] anyhow::Error),
+}
+
+impl std::fmt::Debug for CreateDebtError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
+    }
+}
+
+impl ResponseError for CreateDebtError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            CreateDebtError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            CreateDebtError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
     }
 }

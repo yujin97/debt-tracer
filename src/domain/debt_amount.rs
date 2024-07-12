@@ -1,3 +1,5 @@
+use rust_decimal::prelude::*;
+
 #[derive(Debug)]
 pub struct DebtAmount(f64);
 
@@ -16,6 +18,13 @@ impl DebtAmount {
 
     pub fn inner(&self) -> f64 {
         self.0
+    }
+
+    pub fn inner_decimal(&self) -> Result<Decimal, String> {
+        match Decimal::from_f64(self.0) {
+            Some(inner) => Ok(inner),
+            None => Err(format!("{} is not a valid amount.", self.0)),
+        }
     }
 }
 
