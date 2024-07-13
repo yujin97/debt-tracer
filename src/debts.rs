@@ -82,11 +82,6 @@ pub async fn create_debt(
         .try_into()
         .map_err(CreateDebtError::ValidationError)?;
 
-    let amount = new_debt
-        .amount
-        .inner_decimal()
-        .map_err(CreateDebtError::ValidationError)?;
-
     let debt_id = Uuid::new_v4();
 
     sqlx::query!(
@@ -97,7 +92,7 @@ pub async fn create_debt(
         debt_id.clone(),
         new_debt.creditor_id.as_ref(),
         new_debt.debtor_id.as_ref(),
-        amount,
+        new_debt.amount.as_ref(),
         new_debt.currency.to_string(),
         new_debt.description.as_ref(),
         new_debt.status.to_string(),

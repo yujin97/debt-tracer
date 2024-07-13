@@ -1,7 +1,7 @@
 use rust_decimal::prelude::*;
 
 #[derive(Debug)]
-pub struct DebtAmount(f64);
+pub struct DebtAmount(Decimal);
 
 impl DebtAmount {
     pub fn parse(amount: f64) -> Result<Self, String> {
@@ -13,23 +13,26 @@ impl DebtAmount {
             return Err(format!("{} is not a positive number.", amount));
         }
 
-        Ok(Self(amount))
+        match Decimal::from_f64(amount) {
+            Some(amount) => Ok(Self(amount)),
+            None => Err(format!("{} is not a valid amount.", amount)),
+        }
     }
 
-    pub fn inner(&self) -> f64 {
+    pub fn inner(&self) -> Decimal {
         self.0
     }
 
-    pub fn inner_decimal(&self) -> Result<Decimal, String> {
-        match Decimal::from_f64(self.0) {
+    pub fn inner_f64(&self) -> Result<f64, String> {
+        match self.0.to_f64() {
             Some(inner) => Ok(inner),
-            None => Err(format!("{} is not a valid amount.", self.0)),
+            None => Err(format!("{} cannot be converted into f64", self.0)),
         }
     }
 }
 
-impl AsRef<f64> for DebtAmount {
-    fn as_ref(&self) -> &f64 {
+impl AsRef<Decimal> for DebtAmount {
+    fn as_ref(&self) -> &Decimal {
         &self.0
     }
 }
