@@ -125,7 +125,9 @@ pub async fn get_debts_by_user_id(
         user_id
     )
     .fetch_all(pool)
-    .await;
+    .await
+    .context("Failed to fetch debts from the database.")
+    .context("Internal Server Error");
 
     match result {
         Ok(result) => {
@@ -155,7 +157,7 @@ pub async fn get_debts_by_user_id(
 pub enum CreateDebtError {
     #[error("{0}")]
     ValidationError(String),
-    #[error("Error occurred when creating a new debt.")]
+    #[error("Internal Server Error")]
     UnexpectedError(#[from] anyhow::Error),
 }
 
