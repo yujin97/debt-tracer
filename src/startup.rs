@@ -12,6 +12,7 @@ use secrecy::{ExposeSecret, Secret};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::net::TcpListener;
+use tracing_actix_web::TracingLogger;
 
 async fn health_check() -> impl Responder {
     HttpResponse::Ok()
@@ -69,6 +70,7 @@ pub async fn run(
                 redis_store.clone(),
                 secret_key.clone(),
             ))
+            .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/debt", web::post().to(create_debt))
             .route("/login", web::post().to(login))
