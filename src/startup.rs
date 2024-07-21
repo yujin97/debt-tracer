@@ -72,13 +72,13 @@ pub async fn run(
             ))
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
-            .route("/debt", web::post().to(create_debt))
             .route("/login", web::post().to(login))
             .service(
                 web::scope("")
                     .wrap(from_fn(reject_anonymous_users))
-                    .route("debts", web::get().to(get_debts_by_user_id))
-                    .route("user", web::get().to(get_user_info_by_id)),
+                    .route("/debt", web::post().to(create_debt))
+                    .route("/debts", web::get().to(get_debts_by_user_id))
+                    .route("/user", web::get().to(get_user_info_by_id)),
             )
             .app_data(db_pool.clone())
     })

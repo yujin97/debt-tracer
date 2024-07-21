@@ -7,6 +7,8 @@ use std::collections::HashMap;
 async fn create_debt_returns_a_200_for_valid_json_data() {
     let test_app = spawn_app().await;
 
+    test_app.post_login_as_test_creditor().await;
+
     let TestApp {
         test_creditor,
         test_debtor,
@@ -48,6 +50,8 @@ async fn create_debt_returns_a_200_for_valid_json_data() {
 #[tokio::test]
 async fn create_debt_returns_a_400_when_data_is_missing() {
     let test_app = spawn_app().await;
+
+    test_app.post_login_as_test_creditor().await;
 
     let mut create_debt_request = HashMap::new();
 
