@@ -47,11 +47,11 @@ pub async fn login(
         username: body.username.clone(),
         password: body.password.clone(),
     };
-    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
+    tracing::Span::current().record("username", tracing::field::display(&credentials.username));
     match validate_credentials(credentials, &db_pool).await {
         Ok(UserInfo { user_id, username }) => {
-            tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-            tracing::Span::current().record("ussername", &tracing::field::display(&username));
+            tracing::Span::current().record("user_id", tracing::field::display(&user_id));
+            tracing::Span::current().record("ussername", tracing::field::display(&username));
             session.renew();
             session.insert_user_id(user_id).map_err(|e| {
                 InternalError::from_response(
