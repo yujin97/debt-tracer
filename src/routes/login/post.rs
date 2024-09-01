@@ -24,7 +24,10 @@ impl std::fmt::Debug for LoginError {
 
 impl ResponseError for LoginError {
     fn status_code(&self) -> StatusCode {
-        StatusCode::INTERNAL_SERVER_ERROR
+        match self {
+            LoginError::AuthError(_) => StatusCode::UNAUTHORIZED,
+            LoginError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
     }
 }
 
@@ -72,9 +75,10 @@ pub async fn login(
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
+            let status_code = e.status_code();
             Err(InternalError::from_response(
                 e,
-                HttpResponse::InternalServerError().finish(),
+                HttpResponse::build(status_code).finish(),
             ))
         }
     }
