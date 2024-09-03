@@ -64,7 +64,7 @@ impl TryFrom<JsonData> for NewDebt {
 }
 
 #[tracing::instrument(
-    name= "Creating a debt",
+    name = "Creating a debt",
     skip(body, db_pool),
     fields(
         creditor_id = %body.creditor_id,
