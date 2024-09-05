@@ -1,4 +1,5 @@
 pub mod login;
+pub mod signup;
 pub mod users;
 
 pub use login::post::login;

@@ -3,7 +3,7 @@ use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use uuid::Uuid;
 
 pub struct NewUser {
-    pub user_id: String,
+    pub user_id: Uuid,
     pub username: String,
     pub password_hash: String,
     pub email: String,
@@ -22,7 +22,7 @@ impl NewUser {
         .to_string();
 
         Self {
-            user_id: Uuid::new_v4().to_string(),
+            user_id: Uuid::new_v4(),
             username,
             password_hash,
             email,

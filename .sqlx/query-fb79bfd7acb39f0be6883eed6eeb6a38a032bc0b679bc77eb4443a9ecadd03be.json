@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT debt_id, users_1.user_id as creditor_id, users_1.username as creditor_name, users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id JOIN users users_2 ON debts.debtor_id = users_2.user_id WHERE creditor_id = $1 OR debtor_id = $1",
+  "query": "SELECT debt_id, users_1.user_id as creditor_id, users_1.username as creditor_name, users_2.user_id as debtor_id, users_2.username as debtor_name, amount, currency, description, status, created_at FROM debts JOIN users users_1 ON debts.creditor_id =  users_1.user_id JOIN users users_2 ON debts.debtor_id = users_2.user_id WHERE creditor_id = $1 OR debtor_id = $1",
   "describe": {
     "columns": [
       {
@@ -42,6 +42,16 @@
         "ordinal": 7,
         "name": "description",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -57,8 +67,10 @@
       false,
       false,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "3e7edc9646780132bd68165a23c556b39c88adea1edbbc111801e4ff96454bdf"
+  "hash": "fb79bfd7acb39f0be6883eed6eeb6a38a032bc0b679bc77eb4443a9ecadd03be"
 }
