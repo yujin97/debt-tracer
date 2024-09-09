@@ -7,7 +7,8 @@ use actix_web::ResponseError;
 use anyhow::Context;
 use sqlx::PgPool;
 
-struct SignUpJsonRequestBody {
+#[derive(serde::Deserialize)]
+pub struct SignUpJsonRequestBody {
     username: String,
     password: String,
     email: String,

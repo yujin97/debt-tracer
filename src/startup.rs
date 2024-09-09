@@ -1,7 +1,7 @@
 use crate::authentication::reject_anonymous_users;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::debts::{create_debt, get_debts_by_user_id};
-use crate::routes::{get_user_info_by_id, login};
+use crate::routes::{get_user_info_by_id, login, sign_up};
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
@@ -73,6 +73,7 @@ pub async fn run(
             .wrap(TracingLogger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/login", web::post().to(login))
+            .route("/sign_up", web::post().to(sign_up))
             .service(
                 web::scope("")
                     .wrap(from_fn(reject_anonymous_users))
